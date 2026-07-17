@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Link Shortener</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; background:#f6f7fb; }
+    .card { max-width: 720px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
+    input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 14px; }
+    button { padding: 12px 16px; border: none; border-radius: 8px; background: #2563eb; color: white; cursor: pointer; margin-top: 10px; }
+    button:disabled { background: #93c5fd; cursor: not-allowed; }
+    .row { display: flex; gap: 10px; align-items: center; }
+    .result { margin-top: 14px; padding: 12px; background:#eef2ff; border:1px solid #c7d2fe; border-radius: 10px; word-break: break-all; }
+    .muted { color:#6b7280; font-size: 13px; }
+    a { color: #1d4ed8; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Flask Link Shortener</h2>
+    <p class="muted">Enter a URL that starts with <b>http://</b> or <b>https://</b>.</p>
+
+    <form id="shortenForm">
+      <label for="url">Original URL</label>
+      <input id="url" name="url" type="url" placeholder="https://example.com" required />
+      <button id="btn" type="submit">Shorten</button>
+    </form>
+
+    <div id="result" class="result" style="display:none"></div>
+    <div id="error" class="muted" style="margin-top:10px; color:#b91c1c"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('shortenForm');
+    const btn = document.getElementById('btn');
+    const result = document.getElementById('result');
+    const error = document.getElementById('error');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      btn.disabled = true;
+      result.style.display = 'none';
+      error.textContent = '';
+
+      const url = document.getElementById('url').value.trim();
+
+      try {
+        const resp = await fetch('/api/shorten', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+
+        const data = await resp.json();
+        if (!resp.ok) {
+          throw new Error(data.error || 'Request failed');
+        }
+
+        result.innerHTML = `Short link: <a href="${data.short_url}" target="_blank">${data.short_url}</a>`;
+        result.style.display = 'block';
+      } catch (err) {
+        error.textContent = err.message;
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
+
